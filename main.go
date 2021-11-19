@@ -35,9 +35,9 @@ func main() {
 		return
 	}*/
 
-	err = device.SetPlaybackURI("http://unity-addressables.int.viewport.com.au/Standup-Stingers/Lacuna%20Coil-Our%20Truth.wav")
+/*	err = device.SetPlaybackURI("http://unity-addressables.int.viewport.com.au/Standup-Stingers/Lacuna%20Coil-Our%20Truth.wav")
 	if err != nil {
 		fmt.Printf("Could not set media URI: %s\n", err)
 		return
-	}
+	}*/
 }

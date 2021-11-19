@@ -14,9 +14,9 @@ type sonosDevice struct {
 type PlaybackState uint8
 
 const (
-	PlaybackStopped PlaybackState = 0
-	PlaybackPaused = 1
-	PlaybackPlaying = 2
+	PlaybackStopped PlaybackState = iota
+	PlaybackPaused
+	PlaybackPlaying
 )
 
 func (state PlaybackState)String() string {
@@ -28,6 +28,23 @@ func (state PlaybackState)String() string {
 	return "Unknown State"
 }
 
+type SeekType uint8
+
+const (
+	SeekTrackNumber SeekType = iota
+	SeekTime
+	SeekTimeDelta
+)
+
+func (seekType SeekType)String() string {
+	switch seekType {
+	case SeekTrackNumber: return "Seek to Track Number"
+	case SeekTime: return "Seek to Time"
+	case SeekTimeDelta: return "Seek to Delta Time"
+	}
+	return "Unknown Seek Type"
+}
+
 type Device interface {
 	internalOnly()
 	GetVolume() (int, error)
@@ -35,6 +52,7 @@ type Device interface {
 	DoPause() error
 	DoPlay() error
 	SetPlaybackURI(URI string) error
+	DoSeek(seekType SeekType, seekValue int) error
 }
 
 func NewSonosDevice(addressOrHostname string) (Device, error) {

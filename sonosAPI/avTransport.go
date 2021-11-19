@@ -3,6 +3,8 @@ package sonosAPI
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
+	"strconv"
 )
 
 var (
@@ -133,4 +135,59 @@ func (device *sonosDevice) SetPlaybackURI(URI string) error {
 	}
 
 	return nil
+}
+
+type seekRequest struct {
+	XMLName   xml.Name `xml:"u:Seek"`
+	XMLNsSoap string   `xml:"xmlns:u,attr"`
+	InstanceID int
+	Unit string
+	Target string
+}
+
+func (device *sonosDevice) DoSeek(seekType SeekType, seekValue int) error {
+	request := seekRequest{
+		XMLNsSoap: avTransportNamespace,
+		InstanceID:  0,
+	}
+
+	switch seekType {
+	case SeekTrackNumber:
+		request.Unit = "TRACK_NR"
+		request.Target = strconv.Itoa(seekValue)
+		break
+	case SeekTime:
+		request.Unit = "REL_TIME"
+		request.Target = seekValueFormatter(seekValue)
+		break
+	case SeekTimeDelta:
+		request.Unit = "TIME_DELTA"
+		if seekValue > 0 {
+			request.Target = fmt.Sprintf("+%s", seekValueFormatter(seekValue))
+		} else {
+			request.Target = fmt.Sprintf("-%s", seekValueFormatter(seekValue))
+		}
+		break
+	}
+
+	data, err := device.deviceRequest(avTransportSuffix, avTransportNamespace, "Seek", request)
+	if err != nil {
+		return err
+	}
+
+	if data.Body.Fault != nil {
+		return errors.New("Fault!")
+	}
+
+	return nil
+}
+
+func seekValueFormatter(seekValue int) string {
+	seconds := seekValue % 60
+	seekValue -= seconds * 60
+	seekValue = seekValue / 60
+	minutes := seekValue % 60
+	seekValue -= minutes * 60
+	hours := minutes / 60
+	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 }
