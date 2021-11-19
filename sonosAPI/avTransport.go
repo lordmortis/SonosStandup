@@ -106,3 +106,31 @@ func (device *sonosDevice) GetPlaybackState() (*PlaybackState, error) {
 
 	return &state, nil
 }
+
+type setPlaybackURIRequest struct {
+	XMLName   xml.Name `xml:"u:SetAVTransportURI"`
+	XMLNsSoap string   `xml:"xmlns:u,attr"`
+	InstanceID int
+	CurrentURI string
+	CurrentURIMetaData string
+}
+
+func (device *sonosDevice) SetPlaybackURI(URI string) error {
+	request := setPlaybackURIRequest{
+		XMLNsSoap: avTransportNamespace,
+		InstanceID:  0,
+		CurrentURI: URI,
+		CurrentURIMetaData: "",
+	}
+
+	data, err := device.deviceRequest(avTransportSuffix, avTransportNamespace, "SetAVTransportURI", request)
+	if err != nil {
+		return err
+	}
+
+	if data.Body.Fault != nil {
+		return errors.New("Fault!")
+	}
+
+	return nil
+}

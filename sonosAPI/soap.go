@@ -72,7 +72,7 @@ func (s *soapResponseBody) UnmarshalXML(decoder *xml.Decoder, start xml.StartEle
 				break
 			case "urn:schemas-upnp-org:service:AVTransport:1":
 				switch elem.Name.Local {
-				case "PauseResponse", "PlayResponse":
+				case "PauseResponse", "PlayResponse", "SetAVTransportURIResponse":
 					ignoreEnd = true
 					break
 				case "GetTransportInfoResponse":

@@ -34,6 +34,7 @@ type Device interface {
 	GetPlaybackState() (*PlaybackState, error)
 	DoPause() error
 	DoPlay() error
+	SetPlaybackURI(URI string) error
 }
 
 func NewSonosDevice(addressOrHostname string) (Device, error) {

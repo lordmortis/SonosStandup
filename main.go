@@ -12,19 +12,14 @@ func main() {
 		return
 	}
 
+	/*
 	initialVolume, err := device.GetVolume()
 	if err != nil {
 		fmt.Printf("Could not get volume from sonos: %s\n", err)
 		return
 	}
 
-	fmt.Printf("Volume is %v\n", initialVolume)
-
-	err = device.DoPlay()
-	if err != nil {
-		fmt.Printf("Could not play: %s\n", err)
-		return
-	}
+	_ = initialVolume
 
 	state, err := device.GetPlaybackState()
 	if err != nil {
@@ -32,19 +27,17 @@ func main() {
 		return
 	}
 
-	fmt.Printf("State is %s\n", *state)
+	_ = initialState
 
 	err = device.DoPause()
 	if err != nil {
 		fmt.Printf("Could not pause: %s\n", err)
 		return
-	}
+	}*/
 
-	state, err = device.GetPlaybackState()
+	err = device.SetPlaybackURI("http://unity-addressables.int.viewport.com.au/Standup-Stingers/Lacuna%20Coil-Our%20Truth.wav")
 	if err != nil {
-		fmt.Printf("Unable to get playback state: %s\n", err)
+		fmt.Printf("Could not set media URI: %s\n", err)
 		return
 	}
-
-	fmt.Printf("State is %s\n", *state)
 }
