@@ -18,11 +18,33 @@ func main() {
 		return
 	}
 
-	_ = initialVolume
+	fmt.Printf("Volume is %v\n", initialVolume)
+
+	err = device.DoPlay()
+	if err != nil {
+		fmt.Printf("Could not play: %s\n", err)
+		return
+	}
+
+	state, err := device.GetPlaybackState()
+	if err != nil {
+		fmt.Printf("Unable to get playback state: %s\n", err)
+		return
+	}
+
+	fmt.Printf("State is %s\n", *state)
 
 	err = device.DoPause()
 	if err != nil {
 		fmt.Printf("Could not pause: %s\n", err)
 		return
 	}
+
+	state, err = device.GetPlaybackState()
+	if err != nil {
+		fmt.Printf("Unable to get playback state: %s\n", err)
+		return
+	}
+
+	fmt.Printf("State is %s\n", *state)
 }

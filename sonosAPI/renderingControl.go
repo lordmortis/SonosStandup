@@ -3,7 +3,6 @@ package sonosAPI
 import (
 	"encoding/xml"
 	"errors"
-	"fmt"
 )
 
 var (
@@ -23,15 +22,13 @@ type getVolumeResponse struct {
 }
 
 func (device *sonosDevice) GetVolume() (int, error) {
-	url := fmt.Sprintf("%s/%s", device.baseURL.String(), renderingSuffix)
-
 	request := getVolumeRequest{
 		XMLNsSoap: renderingSoapNamespace,
 		InstanceID:  0,
 		Channel:   "Master",
 	}
 
-	data, err := soapCall(url, renderingSoapNamespace, "GetVolume", request)
+	data, err := device.deviceRequest(renderingSuffix, renderingSoapNamespace, "GetVolume", request)
 	if err != nil {
 		return -1, err
 	}

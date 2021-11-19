@@ -46,8 +46,6 @@ func (s *soapResponseBody) UnmarshalXML(decoder *xml.Decoder, start xml.StartEle
 			return nil
 		}
 
-
-
 		switch elem := token.(type) {
 		case xml.StartElement:
 			if elem.Name.Space == soapEnvNS && elem.Name.Local == "Fault" {
@@ -57,18 +55,42 @@ func (s *soapResponseBody) UnmarshalXML(decoder *xml.Decoder, start xml.StartEle
 					return errors.New("decode error")
 				}
 				s.Fault = &fault
-			} else if elem.Name.Space == "urn:schemas-upnp-org:service:RenderingControl:1" && elem.Name.Local == "GetVolumeResponse" {
-				content := getVolumeResponse{}
-				err := decoder.DecodeElement(&content, &elem)
-				if err != nil {
-					return errors.New("decode error")
-				}
-				s.Content = content
-			} else if elem.Name.Space == "urn:schemas-upnp-org:service:AVTransport:1" && elem.Name.Local == "PauseResponse" {
-				ignoreEnd = true
-			} else {
-				fmt.Printf("Start: '%s' - '%s'\n", elem.Name.Space, elem.Name.Local)
+				continue
 			}
+
+			var err error
+
+			switch elem.Name.Space {
+			case "urn:schemas-upnp-org:service:RenderingControl:1":
+				switch elem.Name.Local {
+				case "GetVolumeResponse":
+					content := getVolumeResponse{}
+					err = decoder.DecodeElement(&content, &elem)
+					s.Content = content
+					break
+				}
+				break
+			case "urn:schemas-upnp-org:service:AVTransport:1":
+				switch elem.Name.Local {
+				case "PauseResponse", "PlayResponse":
+					ignoreEnd = true
+					break
+				case "GetTransportInfoResponse":
+					content := getPlaybackStateResponse{}
+					err = decoder.DecodeElement(&content, &elem)
+					s.Content = content
+					break
+				}
+				break
+			default:
+				fmt.Printf("Unknown Payload: '%s' - '%s'\n", elem.Name.Space, elem.Name.Local)
+				ignoreEnd = true
+			}
+
+			if err != nil {
+				return errors.New("decode error")
+			}
+
 		case xml.EndElement:
 			if elem.Name.Space == soapEnvNS && elem.Name.Local == "Body" {
 				return nil
@@ -100,8 +122,9 @@ type soapFaultDetail struct {
 	Content interface{} `xml:",omitempty"`
 }
 
-func soapCall(url string, namespace string, action string, payload interface{}) (*soapResponse, error) {
-	arequest := soapRequest{
+func (device *sonosDevice) deviceRequest(suffix string, namespace string, action string, payload interface{}) (*soapResponse, error) {
+	url := fmt.Sprintf("%s/%s", device.baseURL.String(), suffix)
+	aRequest := soapRequest{
 		XMLNsSoap: "http://schemas.xmlsoap.org/soap/envelope/",
 		XMLEncodingStyle: "http://schemas.xmlsoap.org/soap/encoding/",
 		Body: soapBody{
@@ -109,7 +132,7 @@ func soapCall(url string, namespace string, action string, payload interface{}) 
 		},
 	}
 
-	marshalled, err := xml.MarshalIndent(arequest, "", "\t")
+	marshalled, err := xml.MarshalIndent(aRequest, "", "\t")
 	if err != nil {
 		return nil, err
 	}

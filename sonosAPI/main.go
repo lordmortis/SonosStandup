@@ -11,14 +11,32 @@ type sonosDevice struct {
 	baseURL url.URL
 }
 
-type SonosDevice interface {
+type PlaybackState uint8
+
+const (
+	PlaybackStopped PlaybackState = 0
+	PlaybackPaused = 1
+	PlaybackPlaying = 2
+)
+
+func (state PlaybackState)String() string {
+	switch state {
+	case PlaybackStopped: return "Stopped"
+	case PlaybackPaused: return "Paused"
+	case PlaybackPlaying: return "Playing"
+	}
+	return "Unknown State"
+}
+
+type Device interface {
 	internalOnly()
 	GetVolume() (int, error)
+	GetPlaybackState() (*PlaybackState, error)
 	DoPause() error
 	DoPlay() error
 }
 
-func NewSonosDevice(addressOrHostname string) (SonosDevice, error) {
+func NewSonosDevice(addressOrHostname string) (Device, error) {
 
 	baseURL, err := url.Parse(fmt.Sprintf("http://%s:1400", addressOrHostname))
 	if err != nil {
@@ -44,7 +62,3 @@ func NewSonosDevice(addressOrHostname string) (SonosDevice, error) {
 }
 
 func (device *sonosDevice) internalOnly() {}
-
-func (device *sonosDevice) DoPlay() error {
-	return errors.New("NOT IMPLEMENTED")
-}
