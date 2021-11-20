@@ -1,6 +1,7 @@
 package state
 
 import (
+	"SonosStandup/sonosAPI"
 	"encoding/gob"
 	"gopkg.in/errgo.v2/errors"
 	"os"
@@ -10,7 +11,10 @@ type Data struct {
 	AllTracks []string
 	PlayedTracks []string
 	AvailableTracks []string
+	LastTrack string
 
+	PreviousState sonosAPI.PlaybackState
+	PreviousQueue int
 	PreviousVolume int
 	path string
 }

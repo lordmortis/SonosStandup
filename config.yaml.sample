@@ -1,2 +1,3 @@
 SonosIP: ip of sonos
 StatePath: path-to-store-state
+Volume: 50

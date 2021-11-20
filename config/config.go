@@ -10,10 +10,12 @@ import (
 type Config struct {
 	SonosIP string
 	StatePath string
+	Volume int
 }
 
 func setDefaults() {
 	viper.SetDefault("StatePath", "/var/local/sonos-standup")
+	viper.SetDefault("Volume", 50)
 }
 
 func Load(filename *string) (*Config, error) {

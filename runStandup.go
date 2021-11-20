@@ -2,7 +2,11 @@ package main
 
 import (
 	"SonosStandup/sonosAPI"
+	"fmt"
 	"gopkg.in/errgo.v2/errors"
+	"math"
+	"math/rand"
+	"time"
 )
 
 type RunStandupCommand struct {
@@ -18,42 +22,51 @@ func init() {
 }
 
 func (x *RunStandupCommand)Execute(args []string) error {
+	rand.Seed(time.Now().UnixNano())
+
 	device, err := sonosAPI.NewSonosDevice(configData.SonosIP)
 	if err != nil {
 		return errors.Because(err, nil, "could not connect to sonos")
 	}
 
-	initialVolume, err := device.GetVolume()
+	stateData.PreviousVolume, err = device.GetVolume()
 	if err != nil {
 		return errors.Because(err, nil, "could not get volume from sonos")
 	}
-
-	_ = initialVolume
-	//TODO: write initial volume to state file
 
 	state, err := device.GetPlaybackState()
 	if err != nil {
 		return errors.Because(err, nil, "could not get playback state from sonos")
 	}
 
+	stateData.PreviousState = *state
 	if *state == sonosAPI.PlaybackPlaying {
-		//TODO: write that we were playing to statefile
 		err = device.DoPause()
 		if err != nil {
 			return errors.Because(err, nil, "could not pause sonos")
 		}
-	} else {
-		//TODO: write that we were stopped to statefile
 	}
 
-	//TODO: Pick the song / reset the songlist
-	err = device.SetPlaybackURI("http://unity-addressables.int.viewport.com.au/Standup-Stingers/Darude-Sandstorm.flac")
+	noSongs := len(stateData.AvailableTracks)
+
+	if noSongs == 0 {
+		fmt.Println("All songs played, rotating the list")
+		stateData.AvailableTracks = stateData.AllTracks
+		stateData.PlayedTracks = []string{}
+		noSongs = len(stateData.AvailableTracks)
+	}
+
+	songIndex := int(math.Trunc(rand.Float64() * float64(noSongs)))
+	if songIndex > (noSongs -1) {
+		songIndex = noSongs - 1
+	}
+
+	err = device.SetPlaybackURI(stateData.AvailableTracks[songIndex])
 	if err != nil {
 		return errors.Because(err, nil, "could not set Media URI")
 	}
 
-	//TODO: Get volume from config file
-	err = device.SetVolume(50)
+	err = device.SetVolume(configData.Volume)
 	if err != nil {
 		return errors.Because(err, nil, "could not set Media URI")
 	}
@@ -62,6 +75,23 @@ func (x *RunStandupCommand)Execute(args []string) error {
 	if err != nil {
 		return errors.Because(err, nil, "could not play sonos")
 	}
+
+	stateData.LastTrack = stateData.AvailableTracks[songIndex]
+	stateData.PlayedTracks = append(stateData.PlayedTracks, stateData.LastTrack)
+	songIndex = 0
+	for _, track := range stateData.AvailableTracks {
+		if track != stateData.LastTrack {
+			stateData.AvailableTracks[songIndex] = track
+			songIndex++
+		}
+	}
+	stateData.AvailableTracks = stateData.AvailableTracks[:songIndex]
+	err = stateData.Save()
+	if err != nil {
+		return errors.Because(err, nil, "could not save state")
+	}
+
+	fmt.Printf("Playing %s\n", stateData.LastTrack)
 
 	return nil
 }

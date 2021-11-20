@@ -38,6 +38,7 @@ func (x *AddFileCommand)Execute(args[]string) error {
 	}
 
 	stateData.AllTracks = append(stateData.AllTracks, args[0])
+	stateData.AvailableTracks = append(stateData.AllTracks, args[0])
 	err = stateData.Save()
 	if err != nil {
 		return errors.Because(err, nil, "unable to save state data")
