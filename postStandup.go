@@ -1,6 +1,10 @@
 package main
 
-import "SonosStandup/sonosAPI"
+import (
+	"gopkg.in/errgo.v2/errors"
+
+	"SonosStandup/sonosAPI"
+)
 
 type PostStandupCommand struct {
 }
