@@ -1,12 +1,14 @@
 package main
 
 import (
-	"SonosStandup/sonosAPI"
 	"fmt"
-	"gopkg.in/errgo.v2/errors"
 	"math"
 	"math/rand"
 	"time"
+
+	"gopkg.in/errgo.v2/errors"
+
+	"SonosStandup/sonosAPI"
 )
 
 type RunStandupCommand struct {
@@ -68,7 +70,7 @@ func (x *RunStandupCommand)Execute(args []string) error {
 
 	err = device.SetVolume(configData.Volume)
 	if err != nil {
-		return errors.Because(err, nil, "could not set Media URI")
+		return errors.Because(err, nil, "could not set Volume")
 	}
 
 	err = device.DoPlay()
