@@ -88,6 +88,7 @@ func (x *RunStandupCommand)Execute(args []string) error {
 		}
 	}
 	stateData.AvailableTracks = stateData.AvailableTracks[:songIndex]
+
 	err = stateData.Save()
 	if err != nil {
 		return errors.Because(err, nil, "could not save state")
