@@ -63,6 +63,9 @@ func (s *soapResponseBody) UnmarshalXML(decoder *xml.Decoder, start xml.StartEle
 			switch elem.Name.Space {
 			case "urn:schemas-upnp-org:service:RenderingControl:1":
 				switch elem.Name.Local {
+				case "SetVolumeResponse":
+					ignoreEnd = true
+					break
 				case "GetVolumeResponse":
 					content := getVolumeResponse{}
 					err = decoder.DecodeElement(&content, &elem)
@@ -97,7 +100,7 @@ func (s *soapResponseBody) UnmarshalXML(decoder *xml.Decoder, start xml.StartEle
 			} else if ignoreEnd {
 				ignoreEnd = false
 			} else {
-				return errors.New("unknown end element")
+				return errors.New(fmt.Sprintf("unknown end element: %s", elem.Name))
 			}
 		}
 	}

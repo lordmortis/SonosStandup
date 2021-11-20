@@ -48,6 +48,7 @@ func (seekType SeekType)String() string {
 type Device interface {
 	internalOnly()
 	GetVolume() (int, error)
+	SetVolume(int) error
 	GetPlaybackState() (*PlaybackState, error)
 	DoPause() error
 	DoPlay() error

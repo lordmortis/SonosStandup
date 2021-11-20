@@ -1,43 +1,31 @@
 package main
 
 import (
-	"SonosStandup/sonosAPI"
-	"fmt"
+	"os"
+	"runtime"
+
+	"github.com/jessevdk/go-flags"
 )
 
+type Options struct {
+	ConfigFile string `long:"configFile" description:"path to config.yaml file"`
+}
+
+var options Options
+var parser = flags.NewParser(&options, flags.Default)
+
 func main() {
-	device, err := sonosAPI.NewSonosDevice("172.17.172.69")
-	if err != nil {
-		fmt.Printf("Could not connect to sonos: %s\n", err)
-		return
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	parser.CommandHandler = func(command flags.Commander, args[]string) error {
+		return command.Execute(args)
 	}
 
-	/*
-	initialVolume, err := device.GetVolume()
-	if err != nil {
-		fmt.Printf("Could not get volume from sonos: %s\n", err)
-		return
+	if _, err := parser.Parse(); err != nil {
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+			os.Exit(0)
+		} else {
+			os.Exit(1)
+		}
 	}
-
-	_ = initialVolume
-
-	state, err := device.GetPlaybackState()
-	if err != nil {
-		fmt.Printf("Unable to get playback state: %s\n", err)
-		return
-	}
-
-	_ = initialState
-
-	err = device.DoPause()
-	if err != nil {
-		fmt.Printf("Could not pause: %s\n", err)
-		return
-	}*/
-
-/*	err = device.SetPlaybackURI("http://unity-addressables.int.viewport.com.au/Standup-Stingers/Lacuna%20Coil-Our%20Truth.wav")
-	if err != nil {
-		fmt.Printf("Could not set media URI: %s\n", err)
-		return
-	}*/
 }
