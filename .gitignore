@@ -3,6 +3,8 @@
 !*.sample.json
 *.toml
 !*.sample.toml
+*.yaml
+!*.sample.yaml
 bin/
 tmp/
 

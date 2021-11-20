@@ -18,12 +18,10 @@ func init() {
 }
 
 func (x *RunStandupCommand)Execute(args []string) error {
-	device, err := sonosAPI.NewSonosDevice("172.17.172.69")
+	device, err := sonosAPI.NewSonosDevice(configData.SonosIP)
 	if err != nil {
 		return errors.Because(err, nil, "could not connect to sonos")
 	}
-
-	_ = device
 
 	initialVolume, err := device.GetVolume()
 	if err != nil {
