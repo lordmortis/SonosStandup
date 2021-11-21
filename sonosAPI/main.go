@@ -42,6 +42,12 @@ type PlaybackPosition struct {
 	TrackPosition int
 }
 
+type MediaInfo struct {
+	CurrentURI string
+	NextURI string
+	NumberOfTracks int
+}
+
 func (seekType SeekType)String() string {
 	switch seekType {
 	case SeekTrackNumber: return "Seek to Track Number"
@@ -55,6 +61,7 @@ type Device interface {
 	internalOnly()
 	GetVolume() (int, error)
 	SetVolume(int) error
+	GetMediaInfo() (*MediaInfo, error)
 	GetPlaybackState() (*PlaybackState, error)
 	GetPositionInfo() (*PlaybackPosition, error)
 	DoPause() error

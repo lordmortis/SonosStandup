@@ -88,6 +88,11 @@ func (s *soapResponseBody) UnmarshalXML(decoder *xml.Decoder, start xml.StartEle
 					err = decoder.DecodeElement(&content, &elem)
 					s.Content = content
 					break
+				case "GetMediaInfoResponse":
+					content := getMediaInfoResponse{}
+					err = decoder.DecodeElement(&content, &elem)
+					s.Content = content
+					break
 				}
 				break
 			default:

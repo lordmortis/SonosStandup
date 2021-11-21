@@ -27,12 +27,12 @@ func (x *TestCommand)Execute(args[]string) error {
 		return errors.Because(err, nil, "could not connect to sonos")
 	}
 
-	position, err := device.GetPositionInfo()
+	mediaInfo, err := device.GetMediaInfo()
 	if err != nil {
-		return errors.Because(err, nil, "could not set previous volume")
+		return errors.Because(err, nil, "could not make request")
 	}
 
-	_ = position
+	_ = mediaInfo
 
 	return nil
 }

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 var (
@@ -183,16 +182,6 @@ func (device *sonosDevice) DoSeek(seekType SeekType, seekValue int) error {
 	return nil
 }
 
-func timeValueFormatter(value int) string {
-	seconds := value % 60
-	value -= seconds * 60
-	value = value / 60
-	minutes := value % 60
-	value -= minutes * 60
-	hours := minutes / 60
-	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
-}
-
 type getPositionInfoRequest struct {
 	XMLName   xml.Name `xml:"u:GetPositionInfo"`
 	XMLNsSoap string   `xml:"xmlns:u,attr"`
@@ -235,20 +224,43 @@ func (device *sonosDevice) GetPositionInfo() (*PlaybackPosition, error) {
 	return &playbackPosition, nil
 }
 
-func timeValueParser(value string) int {
-	parts := strings.Split(value, ":")
-	parsedValue := 0
+type getMediaInfoRequest struct {
+	XMLName   xml.Name `xml:"u:GetMediaInfo"`
+	XMLNsSoap string   `xml:"xmlns:u,attr"`
+	InstanceID int
+}
 
-	multiplier := 1
-	for i := len(parts) - 1; i >= 0 ; i-- {
-		parsedPart, err := strconv.Atoi(parts[i])
-		if err != nil  {
-			fmt.Printf("Could not parse part %d of %s ('%s')", i, value, parts[i])
-			continue
-		}
-		parsedValue += parsedPart * multiplier
-		multiplier *= 60
+type getMediaInfoResponse struct {
+	NrTracks int
+	CurrentURI string
+	NextURI string
+}
+
+func (device *sonosDevice) GetMediaInfo() (*MediaInfo, error) {
+	request := getMediaInfoRequest{
+		XMLNsSoap: avTransportNamespace,
+		InstanceID:  0,
 	}
 
-	return parsedValue
+	data, err := device.deviceRequest(avTransportSuffix, avTransportNamespace, "GetMediaInfo", request)
+	if err != nil {
+		return nil, err
+	}
+
+	if data.Body.Fault != nil {
+		return nil, errors.New("Fault!")
+	}
+
+	response, ok := data.Body.Content.(getMediaInfoResponse)
+	if !ok {
+		return nil, errors.New("Invalid reply from server")
+	}
+
+	mediaInfo := MediaInfo{
+		NumberOfTracks: response.NrTracks,
+		CurrentURI: response.CurrentURI,
+		NextURI: response.NextURI,
+	}
+
+	return &mediaInfo, nil
 }
