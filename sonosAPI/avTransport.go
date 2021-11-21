@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -158,14 +159,14 @@ func (device *sonosDevice) DoSeek(seekType SeekType, seekValue int) error {
 		break
 	case SeekTime:
 		request.Unit = "REL_TIME"
-		request.Target = seekValueFormatter(seekValue)
+		request.Target = timeValueFormatter(seekValue)
 		break
 	case SeekTimeDelta:
 		request.Unit = "TIME_DELTA"
 		if seekValue > 0 {
-			request.Target = fmt.Sprintf("+%s", seekValueFormatter(seekValue))
+			request.Target = fmt.Sprintf("+%s", timeValueFormatter(seekValue))
 		} else {
-			request.Target = fmt.Sprintf("-%s", seekValueFormatter(seekValue))
+			request.Target = fmt.Sprintf("-%s", timeValueFormatter(seekValue))
 		}
 		break
 	}
@@ -182,12 +183,72 @@ func (device *sonosDevice) DoSeek(seekType SeekType, seekValue int) error {
 	return nil
 }
 
-func seekValueFormatter(seekValue int) string {
-	seconds := seekValue % 60
-	seekValue -= seconds * 60
-	seekValue = seekValue / 60
-	minutes := seekValue % 60
-	seekValue -= minutes * 60
+func timeValueFormatter(value int) string {
+	seconds := value % 60
+	value -= seconds * 60
+	value = value / 60
+	minutes := value % 60
+	value -= minutes * 60
 	hours := minutes / 60
 	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
+}
+
+type getPositionInfoRequest struct {
+	XMLName   xml.Name `xml:"u:GetPositionInfo"`
+	XMLNsSoap string   `xml:"xmlns:u,attr"`
+	InstanceID int
+}
+
+type getPositionInfoResponse struct {
+	Track int
+	TrackDuration string
+	TrackMetadata string
+	RelTime string
+}
+
+func (device *sonosDevice) GetPositionInfo() (*PlaybackPosition, error) {
+	request := getPositionInfoRequest{
+		XMLNsSoap: avTransportNamespace,
+		InstanceID:  0,
+	}
+
+	data, err := device.deviceRequest(avTransportSuffix, avTransportNamespace, "GetPositionInfo", request)
+	if err != nil {
+		return nil, err
+	}
+
+	if data.Body.Fault != nil {
+		return nil, errors.New("Fault!")
+	}
+
+	response, ok := data.Body.Content.(getPositionInfoResponse)
+	if !ok {
+		return nil, errors.New("Invalid reply from server")
+	}
+
+	playbackPosition := PlaybackPosition{
+		TrackNo: response.Track,
+		TrackDuration: timeValueParser(response.TrackDuration),
+		TrackPosition: timeValueParser(response.RelTime),
+	}
+
+	return &playbackPosition, nil
+}
+
+func timeValueParser(value string) int {
+	parts := strings.Split(value, ":")
+	parsedValue := 0
+
+	multiplier := 1
+	for i := len(parts) - 1; i >= 0 ; i-- {
+		parsedPart, err := strconv.Atoi(parts[i])
+		if err != nil  {
+			fmt.Printf("Could not parse part %d of %s ('%s')", i, value, parts[i])
+			continue
+		}
+		parsedValue += parsedPart * multiplier
+		multiplier *= 60
+	}
+
+	return parsedValue
 }

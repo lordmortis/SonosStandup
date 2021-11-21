@@ -36,6 +36,12 @@ const (
 	SeekTimeDelta
 )
 
+type PlaybackPosition struct {
+	TrackNo int
+	TrackDuration int
+	TrackPosition int
+}
+
 func (seekType SeekType)String() string {
 	switch seekType {
 	case SeekTrackNumber: return "Seek to Track Number"
@@ -50,6 +56,7 @@ type Device interface {
 	GetVolume() (int, error)
 	SetVolume(int) error
 	GetPlaybackState() (*PlaybackState, error)
+	GetPositionInfo() (*PlaybackPosition, error)
 	DoPause() error
 	DoPlay() error
 	SetPlaybackURI(URI string) error
