@@ -14,6 +14,7 @@ type Data struct {
 	LastTrack string
 
 	PreviousState sonosAPI.PlaybackState
+	PreviousURL string
 	PreviousQueue int
 	PreviousVolume int
 	path string

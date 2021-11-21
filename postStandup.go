@@ -31,6 +31,22 @@ func (x *PostStandupCommand)Execute(args []string) error {
 		return errors.Because(err, nil, "could not set previous volume")
 	}
 
-	//TODO: fix the queue thing, resume playing
+	err = device.SetPlaybackURI(stateData.PreviousURL)
+	if err != nil {
+		return errors.Because(err, nil, "could not set previous queue")
+	}
+
+	err = device.DoSeek(sonosAPI.SeekTrackNumber, stateData.PreviousQueue)
+	if err != nil {
+		return errors.Because(err, nil, "could not set previous track")
+	}
+
+	if stateData.PreviousState  == sonosAPI.PlaybackPlaying {
+		err = device.DoPlay()
+		if err != nil {
+			return errors.Because(err, nil, "could not set previous track")
+		}
+	}
+
 	return nil
 }

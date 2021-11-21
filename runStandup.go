@@ -41,6 +41,13 @@ func (x *RunStandupCommand)Execute(args []string) error {
 		return errors.Because(err, nil, "could not get playback position from sonos")
 	}
 
+	mediaInfo, err := device.GetMediaInfo()
+	if err != nil {
+		return errors.Because(err, nil, "could not get media info from sonos")
+	}
+
+	stateData.PreviousURL = mediaInfo.CurrentURI
+
 	if position.TrackNo != 0 {
 		stateData.PreviousQueue = position.TrackNo
 	}
