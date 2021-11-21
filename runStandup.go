@@ -36,6 +36,15 @@ func (x *RunStandupCommand)Execute(args []string) error {
 		return errors.Because(err, nil, "could not get volume from sonos")
 	}
 
+	position, err := device.GetPositionInfo()
+	if err != nil {
+		return errors.Because(err, nil, "could not get playback position from sonos")
+	}
+
+	if position.TrackNo != 0 {
+		stateData.PreviousQueue = position.TrackNo
+	}
+
 	state, err := device.GetPlaybackState()
 	if err != nil {
 		return errors.Because(err, nil, "could not get playback state from sonos")
